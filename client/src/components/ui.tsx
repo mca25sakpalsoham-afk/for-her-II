@@ -1,0 +1,9 @@
+import { motion } from 'framer-motion'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
+
+export function Card({ children, className = '' }: { children: ReactNode; className?: string }) { return <section className={`glass-card ${className}`}>{children}</section> }
+export function Button({ children, className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) { return <motion.button whileTap={{ scale: 0.97 }} className={`focus-ring inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${className}`} {...(props as any)}>{children}</motion.button> }
+export function PageHeader({ eyebrow, title, action }: { eyebrow?: string; title: string; action?: ReactNode }) { return <div className="mb-7 flex items-end justify-between gap-4"><div>{eyebrow && <p className="mb-1 text-xs font-bold uppercase tracking-[.18em] text-rose">{eyebrow}</p>}<h1 className="font-display text-3xl font-semibold tracking-tight text-ink dark:text-cream sm:text-4xl">{title}</h1></div>{action}</div> }
+export function EmptyState({ title, copy }: { title: string; copy: string }) { return <div className="rounded-2xl border border-dashed border-rose/30 px-6 py-10 text-center"><p className="font-display text-xl text-ink dark:text-cream">{title}</p><p className="mt-2 text-sm text-ink/60 dark:text-cream/60">{copy}</p></div> }
+export const dateLabel = (date?: string | null) => date ? new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(date)) : '—'
+export const timeAgo = (date: string) => { const mins = Math.round((Date.now() - new Date(date).getTime()) / 60000); return mins < 1 ? 'now' : mins < 60 ? `${mins}m ago` : mins < 1440 ? `${Math.round(mins / 60)}h ago` : `${Math.round(mins / 1440)}d ago` }

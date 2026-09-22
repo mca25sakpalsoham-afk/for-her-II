@@ -1,0 +1,10 @@
+export type Role = 'GIRLFRIEND' | 'BOYFRIEND'
+export type User = { id: string; displayName: string; role: Role; avatarUrl?: string | null }
+export type Notification = { id: string; title: string; body?: string | null; type: string; readAt?: string | null; createdAt: string }
+export type Cycle = { id: string; startDate: string; endDate?: string | null; notes?: string | null }
+export type Mood = { id: string; mood: string; emoji?: string | null; note?: string | null; createdAt: string }
+export type CheckIn = { id: string; feeling: string; message?: string | null; createdAt: string }
+export type Craving = { id: string; item: string; emoji?: string | null; note?: string | null; status: string; createdAt: string; response?: { status: string; message?: string | null; responder?: { displayName: string } } | null }
+export type QuickAction = { id: string; kind: string; label: string; emoji?: string | null; message?: string | null; createdAt: string }
+export type VideoCall = { id: string; callerId: string; receiverId: string; status: string; startedAt?: string | null; createdAt: string }
+export type PrivacySettings = { shareCycle: boolean; shareEstimates: boolean; shareMood: boolean; shareCheckIns: boolean; shareCravings: boolean; shareNotes: boolean }

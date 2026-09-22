@@ -1,0 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base { * { @apply border-wine/10; } body { @apply min-w-[320px] bg-cream font-sans antialiased; } ::selection { @apply bg-rose/25 text-wine; } }
+@layer components { .glass-card { @apply rounded-[1.7rem] border border-white/50 bg-white/65 p-5 shadow-glow backdrop-blur-md dark:border-white/10 dark:bg-white/[.045]; } .focus-ring { @apply outline-none focus-visible:ring-2 focus-visible:ring-rose focus-visible:ring-offset-2 focus-visible:ring-offset-cream dark:focus-visible:ring-offset-[#171317]; } .font-display { font-family: 'Playfair Display', Georgia, serif; } }

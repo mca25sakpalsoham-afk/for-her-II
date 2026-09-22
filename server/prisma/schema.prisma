@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider         = "mysql"
+  url              = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum Role {
+  GIRLFRIEND
+  BOYFRIEND
+}
+enum CravingStatus {
+  REQUESTED
+  ACCEPTED
+  ORDERED
+  COMPLETED
+  DECLINED
+}
+enum CallStatus {
+  CALLING
+  ACCEPTED
+  DECLINED
+  ENDED
+  FAILED
+  MISSED
+}
+enum NotificationType {
+  MOOD
+  CHECKIN
+  CRAVING
+  ACTION
+  MISS_YOU
+  NOTE
+  CALL
+  CYCLE
+  SYSTEM
+}
+enum TimelineCategory {
+  FIRST_MEETING
+  FIRST_DATE
+  FIRST_PHOTO
+  TRIP
+  BIRTHDAY
+  ANNIVERSARY
+  SPECIAL_DAY
+  RANDOM
+}
+
+model Couple {
+  id        String   @id @default(cuid())
+  name      String   @default("Us")
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id             String            @id @default(cuid())
+  email          String            @unique
+  passwordHash   String
+  displayName    String
+  role           Role              @unique
+  avatarUrl      String?
+  coupleId       String
+  couple         Couple            @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  cycles         Cycle[]
+  moods          MoodHistory[]
+  checkIns       DailyCheckIn[]
+  cravings       Craving[]         @relation("CravingRequester")
+  cravingReplies CravingResponse[] @relation("CravingResponder")
+  actions        QuickAction[]
+  sentNotes      SharedNote[]      @relation("SentNotes")
+  receivedNotes  SharedNote[]      @relation("ReceivedNotes")
+  notifications  Notification[]    @relation("NotificationRecipient")
+  causedNotifications Notification[] @relation("NotificationActor")
+  timelineEvents TimelineEvent[]
+  memoryPhotos   MemoryPhoto[]     @relation("UploadedPhotos")
+  settings       PrivacySettings?
+  initiatedCalls VideoCall[]       @relation("CallInitiator")
+  receivedCalls  VideoCall[]       @relation("CallReceiver")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([coupleId])
+}
+
+model Cycle {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime?
+  notes     String?  @db.VarChar(1000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, startDate])
+}
+
+model MoodHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mood      String   @db.VarChar(80)
+  emoji     String?  @db.VarChar(16)
+  note      String?  @db.VarChar(280)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model DailyCheckIn {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feeling   String   @db.VarChar(32)
+  message   String?  @db.VarChar(500)
+  dateKey   String   @db.VarChar(10)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, dateKey])
+  @@index([userId, createdAt])
+}
+
+model Craving {
+  id          String        @id @default(cuid())
+  requesterId String
+  requester   User          @relation("CravingRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  item        String        @db.VarChar(120)
+  emoji       String?       @db.VarChar(16)
+  note        String?       @db.VarChar(280)
+  status      CravingStatus @default(REQUESTED)
+  response    CravingResponse?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([requesterId, createdAt])
+}
+
+model CravingResponse {
+  id          String        @id @default(cuid())
+  cravingId   String        @unique
+  craving     Craving       @relation(fields: [cravingId], references: [id], onDelete: Cascade)
+  responderId String
+  responder   User          @relation("CravingResponder", fields: [responderId], references: [id], onDelete: Cascade)
+  status      CravingStatus
+  message     String?       @db.VarChar(280)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model QuickAction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String   @db.VarChar(50)
+  label     String   @db.VarChar(120)
+  emoji     String?  @db.VarChar(16)
+  message   String?  @db.VarChar(280)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model SharedNote {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentNotes", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("ReceivedNotes", fields: [receiverId], references: [id], onDelete: Cascade)
+  body       String   @db.VarChar(2000)
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([senderId, receiverId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actorId   String?
+  actor     User?            @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  type      NotificationType
+  title     String           @db.VarChar(160)
+  body      String?          @db.VarChar(400)
+  entityId  String?          @db.VarChar(40)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model TimelineEvent {
+  id          String           @id @default(cuid())
+  coupleId    String
+  creatorId   String
+  creator     User             @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  occurredOn  DateTime
+  title       String           @db.VarChar(160)
+  description String?          @db.VarChar(2000)
+  category    TimelineCategory @default(RANDOM)
+  photos      MemoryPhoto[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([coupleId, occurredOn])
+}
+
+model MemoryPhoto {
+  id          String         @id @default(cuid())
+  coupleId    String
+  uploaderId  String
+  uploader    User           @relation("UploadedPhotos", fields: [uploaderId], references: [id], onDelete: Cascade)
+  timelineId  String?
+  timeline    TimelineEvent? @relation(fields: [timelineId], references: [id], onDelete: SetNull)
+  filename    String         @unique @db.VarChar(180)
+  mimeType    String         @db.VarChar(100)
+  size        Int
+  caption     String?        @db.VarChar(280)
+  createdAt   DateTime       @default(now())
+
+  @@index([coupleId, createdAt])
+}
+
+model VideoCall {
+  id          String     @id @default(cuid())
+  coupleId    String
+  callerId    String
+  caller      User       @relation("CallInitiator", fields: [callerId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User       @relation("CallReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  status      CallStatus @default(CALLING)
+  startedAt   DateTime?
+  endedAt     DateTime?
+  durationSec Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([coupleId, createdAt])
+  @@index([callerId, receiverId])
+}
+
+model PrivacySettings {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shareCycle         Boolean  @default(true)
+  shareEstimates     Boolean  @default(true)
+  shareMood          Boolean  @default(true)
+  shareCheckIns      Boolean  @default(true)
+  shareCravings      Boolean  @default(true)
+  shareNotes         Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
