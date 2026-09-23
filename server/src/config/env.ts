@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 const parsed = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  SERVER_PORT: z.coerce.number().int().min(1).default(4000),
+  SERVER_PORT: z.coerce.number().int().min(1).default(Number(process.env.PORT) || 4000),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
   CLIENT_URL: z.string().url(),
